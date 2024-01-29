@@ -1,13 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px 
 import streamlit as st
 sns.set(style='dark')
 
 # Load Data
-#all_df = pd.read_csv("https://raw.githubusercontent.com/MHendriF/Belajar-Analisis-Data-dengan-Python/main/Submission/dashboard/main_data.csv")
-all_df = pd.read_csv("main_data.csv")
+all_df = pd.read_csv("https://raw.githubusercontent.com/MHendriF/Belajar-Analisis-Data-dengan-Python/main/Submission/dashboard/main_data.csv")
+
 st.set_page_config(page_title="Bike-Sharing Dashboard",
                    page_icon="bar_chart:",
                    layout="wide")
@@ -39,7 +38,7 @@ def create_monthly_users_df(df):
     })
     monthly_users_df = monthly_users_df.reset_index()
     monthly_users_df['month'] = pd.Categorical(monthly_users_df['month'],
-                                             categories=['Jan','Feb','Mar','Apr','May','June','July','Aug','Sep','Oct','Nov','Dec'])
+                                             categories=['Jan','Feb','Mar','Apr','May','June','July','Aug','Sept','Oct','Nov','Dec'])
     monthly_users_df = monthly_users_df.sort_values('month')
     return monthly_users_df
 
@@ -58,14 +57,8 @@ def create_hourly_users_df(df):
     return hourly_users_df
 
 def create_composition_users_df(df):
-    monthly_users_df = df.groupby(["month", "year"]).agg({
-        "total_users": "sum"
-    })
-    monthly_users_df = monthly_users_df.reset_index()
-    monthly_users_df['month'] = pd.Categorical(monthly_users_df['month'],
-                                             categories=['Jan','Feb','Mar','Apr','May','June','July','Aug','Sep','Oct','Nov','Dec'])
-    monthly_users_df = monthly_users_df.sort_values('month')
-    return monthly_users_df
+    composition_users_df = df[['casual_users', 'registered_users']].sum()
+    return composition_users_df
 
 datetime_columns = ["date"]
 all_df.sort_values(by="date", inplace=True)
@@ -118,12 +111,14 @@ with col3:
 st.markdown("---")
 
 
-# Bagaimana perbandingan penggunaan sepeda pada tiap musim di tahun 2011 dan 2012
+# Bagaimana tren penyewaan sepeda di tiap musimnya pada tahun 2011 dan 2012?
 st.subheader('Season')
 
 fig, ax = plt.subplots(figsize=(15, 7))
-palette=["blue", "orange"]
-sns.barplot(data=seasonly_users_df, x="season", y="total_users", hue="year", palette=palette, errorbar=None, ax=ax)
+sns.barplot(data=seasonly_users_df, x="season", y="total_users", hue="year", palette="Set1", errorbar=None, ax=ax)
+
+for i in ax.containers:
+    ax.bar_label(i,fontsize=10)
 
 ax.set_xlabel('Season',fontsize=15)
 ax.set_ylabel('Total Rides',fontsize=15)
@@ -131,12 +126,14 @@ ax.tick_params(axis='x', labelsize=15)
 ax.tick_params(axis='y', labelsize=15)
 st.pyplot(fig)
 
-# Bagaimana perbandingan penggunaan sepeda pada tiap kondisi cuaca di tahun 2011 dan 2012?
+# Bagaimana perbedaan tren penyewaan sepeda setiap bulannya pada tahun 2011 dengan 2012?
 st.subheader('Wather Situation')
 
 fig, ax = plt.subplots(figsize=(15, 7))
-palette=["blue", "orange"]
-sns.barplot(data=weather_users_df, x="weather_situation", y="total_users", hue="year", palette=palette, errorbar=None, ax=ax)
+sns.barplot(data=weather_users_df, x="weather_situation", y="total_users", hue="year", palette="Set2", errorbar=None, ax=ax)
+
+for i in ax.containers:
+    ax.bar_label(i,fontsize=10)
 
 ax.set_xlabel('Weather Situation',fontsize=15)
 ax.set_ylabel('Total Rides',fontsize=15)
@@ -148,9 +145,15 @@ st.pyplot(fig)
 st.subheader('Monthly User')
 
 fig, ax = plt.subplots(figsize=(15, 7))
-palette=["blue", "orange"]
 
-sns.lineplot(x='month', y='total_users', hue='year', data=monthly_users_df, marker="o", palette=palette, markersize=8, ax=ax)
+sns.lineplot(x='month', y='total_users', hue='year', data=monthly_users_df, marker="o", palette="Set1", markersize=8, ax=ax)
+
+# label points on the plot
+for x, y in zip(monthly_users_df['month'], monthly_users_df['total_users']):
+    plt.text(x = x, # x-coordinate position of data label
+             y = y-150, # y-coordinate position of data label, adjusted to be 150 below the data point
+             s = '{:.0f}'.format(y), # data label, formatted to ignore decimals
+             color = 'grey') # set colour of line
 
 ax.set_xlabel('Month',fontsize=15)
 ax.set_ylabel('Total Rides',fontsize=15)
@@ -158,8 +161,8 @@ ax.tick_params(axis='x', labelsize=15)
 ax.tick_params(axis='y', labelsize=15)
 st.pyplot(fig)
 
-# Kapan waktu penggunaan sepeda tertinggi dan terendah?
-st.subheader('Hourly User')
+# Kapan traffic tertinggi dan terendah penyewaan sepeda?
+st.subheader('Traffic User')
 
 fig, ax = plt.subplots(figsize=(15, 7))
 
@@ -167,8 +170,27 @@ sns.despine(fig)
 sns.set(style="whitegrid")
 sns.barplot(data=hourly_users_df, x='total_users', y='hour', orient='h', ax=ax)
 
+for i in ax.containers:
+    ax.bar_label(i,fontsize=10)
+    
 ax.set_xlabel('Total Rides',fontsize=15)
 ax.set_ylabel('Time',fontsize=15)
 ax.tick_params(axis='x', labelsize=15)
 ax.tick_params(axis='y', labelsize=15)
+st.pyplot(fig)
+
+# Bagaimana komposisi pengguna Bike sharing?
+st.subheader('User Composition')
+
+fig, ax = plt.subplots(figsize=(6, 6))
+sns.despine(fig)
+sns.set_style("whitegrid")
+
+plt.pie(
+    x=composition_users_df,
+    labels=('casual', 'registered'),
+    colors=('#5F9EA0', '#7FFFD4'),
+    autopct='%1.1f%%',
+    wedgeprops = {'width':0.4}
+)
 st.pyplot(fig)
