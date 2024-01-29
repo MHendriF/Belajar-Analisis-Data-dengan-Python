@@ -73,7 +73,7 @@ max_date = all_df["date"].max()
 
 with st.sidebar:
     # Menambahkan logo perusahaan
-    st.image("https://github.com/dicodingacademy/assets/raw/main/logo.png")
+    st.image("https://github.com/MHendriF/Belajar-Analisis-Data-dengan-Python/blob/main/Submission/assets/bycicle.png")
     
     # Mengambil start_date & end_date dari date_input
     start_date, end_date = st.date_input(
