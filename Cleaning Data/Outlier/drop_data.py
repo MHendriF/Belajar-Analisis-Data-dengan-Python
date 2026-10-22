@@ -1,16 +1,25 @@
+import os
 import pandas as pd
-    
-df = pd.read_csv("data.csv")
-    
-Q1 = (df['TotalCharges']).quantile(0.25)
-Q3 = (df['TotalCharges']).quantile(0.75)
-IQR = Q3 - Q1
-    
-maximum = Q3 + (1.5*IQR)
-minimum = Q1 - (1.5*IQR)
-    
-kondisi_lower_than = df['TotalCharges'] < minimum
-kondisi_more_than = df['TotalCharges'] > maximum
-    
-df.drop(df[kondisi_lower_than].index, inplace=True)
-df.drop(df[kondisi_more_than].index, inplace=True)
+
+file_path = "data.csv"
+if os.path.exists(file_path):
+    df = pd.read_csv(file_path)
+else:
+    df = pd.DataFrame({
+        'TotalCharges': [100.0, 150.0, 200.0, 220.0, 180.0, 190.0, 5000.0, -100.0]
+    })
+
+q1 = df['TotalCharges'].quantile(0.25)
+q3 = df['TotalCharges'].quantile(0.75)
+iqr = q3 - q1
+
+maximum = q3 + (1.5 * iqr)
+minimum = q1 - (1.5 * iqr)
+
+# Menghapus outlier menggunakan boolean indexing
+filtered_df = df[(df['TotalCharges'] >= minimum) & (df['TotalCharges'] <= maximum)].copy()
+
+print(f"Batas minimum: {minimum:.2f}, Batas maksimum: {maximum:.2f}")
+print(f"Jumlah baris sebelum filtering: {len(df)}")
+print(f"Jumlah baris setelah filtering outlier: {len(filtered_df)}")
+print(filtered_df)
